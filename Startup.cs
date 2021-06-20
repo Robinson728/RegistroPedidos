@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Blazored.Toast;
 
 namespace RegistroPedidos
 {
@@ -28,6 +29,7 @@ namespace RegistroPedidos
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+            services.AddBlazoredToast();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
