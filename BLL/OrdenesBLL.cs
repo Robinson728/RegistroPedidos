@@ -69,7 +69,13 @@ namespace RegistroPedidos.BLL
 
             try
             {
-                //contexto.Database.ExecuteSqlRaw($"Delete from OrdenesDetalle where OrdenId{ordenes.OrdenId}");
+                contexto.Database.ExecuteSqlRaw($"Delete from OrdenesDetalle where OrdenId{ordenes.OrdenId}");
+
+                foreach (var item in ordenes.Detalle)
+                {
+                    contexto.Entry(item).State = EntityState.Added;
+                }
+
                 contexto.Entry(ordenes).State = EntityState.Modified;
                 paso = contexto.SaveChanges() > 0;
             }
@@ -95,7 +101,7 @@ namespace RegistroPedidos.BLL
                 var ordenes = contexto.Ordenes.Find(id);
                 if (ordenes != null)
                 {
-                    contexto.Ordenes.Remove(ordenes);
+                    contexto.Entry(ordenes).State = EntityState.Deleted;
                     paso = contexto.SaveChanges() > 0;
                 }
             }
