@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Data\PedidosDB.db">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
