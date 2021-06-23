@@ -67,9 +67,9 @@
                     <label>Producto</label>
                     <InputSelect @bind-Value="detalle.ProductoId" class="form-control">
                         @foreach (var item in listaProductos)
-	                    {
+                        {
 		                        <option value="@item.ProductoId">@item.Descripcion</option>
-	                    }
+                        }
                     </InputSelect>
                 </div>
 
@@ -80,7 +80,7 @@
 
                 <div class="col form-group">
                     <label>Cantidad</label>
-                    <input type="number" @bind="cantidad" class="form-control" id="inputCantidad"/>
+                    <input type="number" @bind="cantidad" class="form-control" id="inputCantidad" @oninput="GetTotal"/>
                 </div>
 
                 <div class="col form-group">
@@ -111,8 +111,10 @@
                         {
                             <tr>
                                 <td>@item.ProductoId</td>
-                                <td>@item.Costo</td>
+                                <td>@item.DetallesProducto.Descripcion</td>
+                                <td>@item.DetallesProducto.Costo</td>
                                 <td>@item.Cantidad</td>
+                                <td>@item.Costo</td>
                             </tr>
                         }
                     </tbody>
@@ -132,8 +134,8 @@
 </EditForm>  
 
 @code {
-    [Parameter]
-    public int OrdenId { get; set; }
+        [Parameter]
+        public int OrdenId { get; set; }
 
     private Ordenes ordenes = new Ordenes();
     private Suplidores suplidores = new Suplidores();
@@ -148,6 +150,23 @@
     protected override void OnInitialized()
     {
         Nuevo();
+    }
+
+    private void GetTotal()
+    {
+        total = productos.Costo * detalle.Cantidad;
+    }
+
+    private void Limpiar()
+    {
+        ordenes = new Ordenes();
+        suplidores = new Suplidores();
+        productos = new Productos();
+        detalle = new OrdenesDetalle();
+        listasuplidores = SuplidoresBLL.GetList(r => true);
+        listaProductos = ProductosBLL.GetList(r => true);
+        cantidad = 0;
+        total = 0;
     }
 
     public void Buscar()
@@ -181,62 +200,45 @@
         PersonasBLL.Guardar(personas);
         PrestamosBLL.Guardar(prestamos);
         Nuevo();*@
+
+        ordenes.Detalle.Add(new OrdenesDetalle
+        {
+            ProductoId = productos.ProductoId,
+            Cantidad = cantidad,
+            Costo = total
+        });
+        ordenes.Monto += total;
+        Nuevo();
     }
 
     public void Nuevo()
     {
-       @* moras = new Moras();
-        prestamoSeleccionado = 0;
-        monto = 0;
-        lista = PrestamosBLL.GetList(r => true);*@
-    ordenes = new Ordenes();
-    suplidores = new Suplidores();
-    listasuplidores = SuplidoresBLL.GetList(r => true);
-    listaProductos = ProductosBLL.GetList(r => true);
-}
-
-public void Guardar()
-{
-    var guardar = OrdenesBLL.Guardar(ordenes);
-
-    if (guardar)
-    {
-        Nuevo();
-        toast.ShowInfo("Guardado Correctamente.");
+        Limpiar();
     }
-    else
-        toast.ShowError("No fue posible guardar");
-}
 
-public void Eliminar()
-{
-        @*bool eliminar = false;
+    public void Guardar()
+    {
+        var guardar = OrdenesBLL.Guardar(ordenes);
 
-        var encontrado = MorasBLL.Buscar(moras.MoraId);
+        if (guardar)
+        {
+            Nuevo();
+            toast.ShowInfo("Guardado Correctamente.");
+        }
+        else
+            toast.ShowError("No fue posible guardar");
+    }
+
+    public void Eliminar()
+    {
+        var encontrado = OrdenesBLL.Buscar(ordenes.OrdenId);
 
         if (encontrado != null)
         {
-            foreach (var item in moras.Detalle)
-            {
-                var prestamo = PrestamosBLL.Buscar(item.PrestamoId);
-                var persona = PersonasBLL.Buscar(prestamo.PersonaId);
-
-                persona.Balance -= item.Valor;
-
-                PersonasBLL.Guardar(persona);
-            }
-
-            eliminar = MorasBLL.Eliminar(moras.MoraId);
-
-            if (eliminar)
-            {
-                Nuevo();
-                toast.ShowSuccess("Eliminado Correctamente.");
-            }
-            else
-                toast.ShowError("No fue posible eliminar.");
+            Nuevo();
+            toast.ShowSuccess("Eliminado Correctamente.");
         }
         else
-            toast.ShowError("No encontrado.");*@
+            toast.ShowError("No fue posible eliminar.");
     }
 }

@@ -15,6 +15,7 @@ namespace RegistroPedidos.Models
         public int ProductoId { get; set; }
         public int Cantidad { get; set; }
         public double Costo { get; set; }
+        //public double Total { get; set; }
 
         [ForeignKey("ProductoId")]
         public virtual Productos DetallesProducto { get; set; }

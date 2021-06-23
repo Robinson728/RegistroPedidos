@@ -12,8 +12,9 @@ namespace RegistroPedidos.Models
         [Key]
         public int OrdenId { get; set; }
         public DateTime Fecha { get; set; }
-        public int SuplidorId { get; set; }
         public double Monto { get; set; }
+        public int SuplidorId { get; set; }
+        public Suplidores Suplidor { get; set; }
 
         [ForeignKey("OrdenId")]
         public virtual List<OrdenesDetalle> Detalle { get; set; }
