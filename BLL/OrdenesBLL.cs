@@ -69,7 +69,7 @@ namespace RegistroPedidos.BLL
 
             try
             {
-                contexto.Database.ExecuteSqlRaw($"Delete from OrdenesDetalle where OrdenId{ordenes.OrdenId}");
+                contexto.Database.ExecuteSqlRaw($"Delete FROM OrdenesDetalle where OrdenId = {ordenes.OrdenId}");
 
                 foreach (var item in ordenes.Detalle)
                 {
@@ -124,7 +124,7 @@ namespace RegistroPedidos.BLL
 
             try
             {
-                ordenes = contexto.Ordenes.Find(id);
+                ordenes = contexto.Ordenes.Where(r => r.OrdenId==id).Include(s => s.Detalle).SingleOrDefault();
             }
             catch (Exception)
             {

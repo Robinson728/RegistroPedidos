@@ -65,7 +65,7 @@
             <div class="row">
                 <div class="col form-group">
                     <label>Producto</label>
-                    <InputSelect @bind-Value="detalle.ProductoId" class="form-control">
+                    <InputSelect @bind-Value="productoSeleccionado" class="form-control" @onclick="GetCosto">
                         @foreach (var item in listaProductos)
                         {
 		                        <option value="@item.ProductoId">@item.Descripcion</option>
@@ -75,18 +75,13 @@
 
                 <div class="col form-group">
                     <label>Costo</label>
-                    <InputNumber @bind-Value="productos.Costo" class="form-control" readonly/>
+                    <InputNumber @bind-Value="costoProducto" class="form-control" readonly/>
                 </div>
 
                 <div class="col form-group">
                     <label>Cantidad</label>
-                    <input type="number" @bind="cantidad" class="form-control" id="inputCantidad" @oninput="GetTotal"/>
-                </div>
-
-                <div class="col form-group">
-                    <label>Total</label>
                     <div class="input-group">
-                        <InputNumber @bind-Value="total" class="form-control" readonly/>
+                        <InputNumber @bind-Value="cantidad" class="form-control"/>
                         <div class="input-group-append">
                             <button type="button" class="btn btn-success input-group-text" @onclick="Agregar"><i class="oi oi-plus mr-2"/></button>
                         </div>
@@ -94,7 +89,7 @@
                 </div>
             </div>
 
-            <div class="table-responsive text-nowrap" style="position:relative; height:200px; overflow; grid-auto-columns; display:block;">
+            <div class="table-responsive text-nowrap" style="position:relative; height:200px; overflow: auto; display:block;">
                 <table class="table table-striped">
                     <thead class="thead-light">
                         <tr>
@@ -111,10 +106,13 @@
                         {
                             <tr>
                                 <td>@item.ProductoId</td>
-                                <td>@item.DetallesProducto.Descripcion</td>
-                                <td>@item.DetallesProducto.Costo</td>
-                                <td>@item.Cantidad</td>
+                                <td>@GetDescripcion(item.ProductoId)</td>
                                 <td>@item.Costo</td>
+                                <td>@item.Cantidad</td>
+                                <td>@(item.Costo * item.Cantidad)</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" @onclick="(() => Remover(item))"><i class="oi oi-trash accordion mr-2"/>Remover</button>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -134,39 +132,67 @@
 </EditForm>  
 
 @code {
-        [Parameter]
-        public int OrdenId { get; set; }
+    [Parameter]
+    public int OrdenId { get; set; }
 
-    private Ordenes ordenes = new Ordenes();
-    private Suplidores suplidores = new Suplidores();
-    private OrdenesDetalle detalle = new OrdenesDetalle();
-    private Productos productos = new Productos();
-    private List<Productos> listaProductos = new List<Productos>();
-    private List<Suplidores> listasuplidores = new List<Suplidores>();
+    public Ordenes ordenes = new Ordenes();
+    public OrdenesDetalle detalle = new OrdenesDetalle();
+    public Productos productos = new Productos();
+    public List<Productos> listaProductos = new List<Productos>();
+    public List<Suplidores> listasuplidores = new List<Suplidores>();
 
+    private int productoSeleccionado = 0;
     private int cantidad = 0;
-    private double total = 0;
+    private double costoProducto = 0;
 
     protected override void OnInitialized()
     {
         Nuevo();
-    }
 
-    private void GetTotal()
-    {
-        total = productos.Costo * detalle.Cantidad;
     }
 
     private void Limpiar()
     {
         ordenes = new Ordenes();
-        suplidores = new Suplidores();
         productos = new Productos();
         detalle = new OrdenesDetalle();
         listasuplidores = SuplidoresBLL.GetList(r => true);
         listaProductos = ProductosBLL.GetList(r => true);
+
         cantidad = 0;
-        total = 0;
+        productoSeleccionado = 0;
+        costoProducto = 0;
+    }
+
+    public void GetMonto()
+    {
+        double totales = 0;
+
+        foreach (var item in ordenes.Detalle)
+        {
+            totales += (item.Costo * item.Cantidad);
+        }
+
+        ordenes.Monto = totales;
+    }
+
+    public void GetCosto()
+    {
+        var costo = ProductosBLL.Buscar(productoSeleccionado);
+
+        if (costo != null)
+        {
+            costoProducto = costo.Costo;
+        }
+    }
+
+    public string GetDescripcion(int id)
+    {
+        Productos producto = new Productos();
+
+        producto = ProductosBLL.Buscar(id);
+
+        return producto.Descripcion;
     }
 
     public void Buscar()
@@ -178,37 +204,43 @@
             if (encontrado != null)
                 this.ordenes = encontrado;
             else
-                toast.ShowWarning("No encontrado.");
+                toast.ShowInfo("No encontrado.");
         }
     }
 
     public void Agregar()
     {
-        @*var prestamo = PrestamosBLL.Buscar(prestamoSeleccionado);
-        var persona = PersonasBLL.Buscar(prestamo.PersonaId);
 
-        moras.Detalle.Add(new MorasDetalle
+        if (cantidad <= 0)
         {
-            MoraId = moras.MoraId,
-            PrestamoId = prestamoSeleccionado,
-            Valor = monto
-        });
+            toast.ShowWarning("Cantidad debe ser mayor a Cero");
+            return;
+        }
 
-        moras.Total += monto;
-        personas.Balance += monto;
-        prestamos.Balance += monto;
-        PersonasBLL.Guardar(personas);
-        PrestamosBLL.Guardar(prestamos);
-        Nuevo();*@
-
-        ordenes.Detalle.Add(new OrdenesDetalle
+        this.ordenes.Detalle.Add(new OrdenesDetalle
         {
-            ProductoId = productos.ProductoId,
+            OrdenId = ordenes.OrdenId,
+            ProductoId = productoSeleccionado,
             Cantidad = cantidad,
-            Costo = total
+            Costo = costoProducto
         });
-        ordenes.Monto += total;
-        Nuevo();
+        cantidad = 0;
+        costoProducto = 0;
+        productoSeleccionado = 0;
+        GetMonto();
+    }
+
+    public void Remover(OrdenesDetalle detalle)
+    {
+        try
+        {
+            ordenes.Detalle.Remove(detalle);
+            GetMonto();
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     public void Nuevo()
@@ -218,12 +250,14 @@
 
     public void Guardar()
     {
-        var guardar = OrdenesBLL.Guardar(ordenes);
+        bool guardar;
+
+        guardar = OrdenesBLL.Guardar(ordenes);
 
         if (guardar)
         {
             Nuevo();
-            toast.ShowInfo("Guardado Correctamente.");
+            toast.ShowSuccess("Guardado Correctamente.");
         }
         else
             toast.ShowError("No fue posible guardar");
@@ -231,9 +265,11 @@
 
     public void Eliminar()
     {
-        var encontrado = OrdenesBLL.Buscar(ordenes.OrdenId);
+        bool eliminar;
 
-        if (encontrado != null)
+        eliminar = OrdenesBLL.Eliminar(ordenes.OrdenId);
+
+        if (eliminar)
         {
             Nuevo();
             toast.ShowSuccess("Eliminado Correctamente.");

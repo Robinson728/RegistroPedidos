@@ -9,13 +9,13 @@ namespace RegistroPedidos.Models
 {
     public class OrdenesDetalle
     {
+
         [Key]
         public int Id { get; set; }
         public int OrdenId { get; set; }
         public int ProductoId { get; set; }
         public int Cantidad { get; set; }
         public double Costo { get; set; }
-        //public double Total { get; set; }
 
         [ForeignKey("ProductoId")]
         public virtual Productos DetallesProducto { get; set; }

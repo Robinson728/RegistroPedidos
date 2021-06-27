@@ -9,8 +9,8 @@ using RegistroPedidos.DAL;
 namespace RegistroPedidos.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20210622034347_AgregandoProductosSuplidores")]
-    partial class AgregandoProductosSuplidores
+    [Migration("20210627214743_Inicial")]
+    partial class Inicial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -34,6 +34,8 @@ namespace RegistroPedidos.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("OrdenId");
+
+                    b.HasIndex("SuplidorId");
 
                     b.ToTable("Ordenes");
                 });
@@ -161,6 +163,17 @@ namespace RegistroPedidos.Migrations
                             SuplidorId = 5,
                             Nombres = "Candy Sarante"
                         });
+                });
+
+            modelBuilder.Entity("RegistroPedidos.Models.Ordenes", b =>
+                {
+                    b.HasOne("RegistroPedidos.Models.Suplidores", "Suplidor")
+                        .WithMany()
+                        .HasForeignKey("SuplidorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Suplidor");
                 });
 
             modelBuilder.Entity("RegistroPedidos.Models.OrdenesDetalle", b =>
